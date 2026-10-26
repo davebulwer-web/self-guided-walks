@@ -41,8 +41,9 @@
   #guideText small { display: block; font-weight: 400; color: var(--muted); }
   .arrived #arrow { background: var(--accent); color: var(--accent-fg); }
   #stopText { margin: 0; max-width: 65ch; }
-  #photos { display: flex; gap: 8px; overflow-x: auto; }
-  #photos img { height: 120px; border-radius: 6px; flex: none; }
+  #photos { display: flex; gap: 8px; overflow-x: auto; flex: none; }
+  #sheet > * { flex: none; }
+  #photos img { height: 170px; max-width: 100%; object-fit: cover; border-radius: 6px; flex: none; }
   .row { display: flex; flex-wrap: wrap; gap: 8px; }
   button, .btn { font: 600 .95rem var(--body); border-radius: 8px; padding: 10px 14px; border: 1px solid var(--line);
     background: var(--bg); color: var(--fg); text-decoration: none; cursor: pointer; }
@@ -73,8 +74,8 @@
     <div id="arrow" aria-hidden="true">↑</div>
     <div id="guideText">Waiting for your location…<small>Allow location access when your phone asks.</small></div>
   </div>
-  <p id="stopText"></p>
   <div id="photos"></div>
+  <p id="stopText"></p>
   <div class="row">
     <button id="prev">Back</button>
     <button id="next" class="primary">Next stop</button>

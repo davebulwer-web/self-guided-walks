@@ -9,28 +9,48 @@
       "lat": 50.9702,
       "lng": 0.0915,
       "text": "Start here. The superstore sits on Bell Farm Road, on the low ground by the River Uck. Head east towards the town centre and the railway line.",
-      "photos": []
+      "photos": [
+        {
+          "src": "photos/uckfield-tesco.jpg",
+          "caption": "Tesco's clock tower entrance"
+        }
+      ]
     },
     {
       "name": "Uckfield railway station",
       "lat": 50.9691,
       "lng": 0.0972,
       "text": "Uckfield is the end of a branch of the Oxted Line, with trains to London Bridge. The first station opened in 1858 on the south side of the High Street. When the line south to Lewes closed in 1969, that station was left on the wrong side of the level crossing and caused traffic jams, so a new one opened on the north side in 1991. The current building replaced a temporary cabin in 2010.",
-      "photos": []
+      "photos": [
+        {
+          "src": "photos/uckfield-station.jpg",
+          "caption": "The 2010 station building"
+        }
+      ]
     },
     {
       "name": "The Picture House",
       "lat": 50.9716,
       "lng": 0.0968,
       "text": "79 High Street. It opened in 1916 as the Garrison Theatre, built to entertain troops stationed nearby, with a half-timbered Tudor-style front designed by Walter Long. It became the Picture House in 1920 and has always been independently run. It was split into two screens in 1993 and a third was added in 2000.",
-      "photos": []
+      "photos": [
+        {
+          "src": "photos/uckfield-picture-house.jpg",
+          "caption": "The Picture House, built 1916"
+        }
+      ]
     },
     {
       "name": "Back to Tesco",
       "lat": 50.9702,
       "lng": 0.0915,
       "text": "Walk back down the High Street, across the railway, and west to the car park. That's the loop done.",
-      "photos": []
+      "photos": [
+        {
+          "src": "photos/uckfield-tesco.jpg",
+          "caption": "Back at Tesco"
+        }
+      ]
     }
   ]
 }
