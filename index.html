@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Source+Sans+3:wght@400;600&display=swap">
 <style>
-  /* Layout: full-screen map with a bottom sheet holding the current stop */
+  /* Layout: map across the top, stop card below; the page scrolls and the stop buttons stay pinned to the bottom */
   :root {
     --bg: #f3f5f1; --surface: #ffffff; --fg: #1d2420; --muted: #5d6a63;
     --accent: #1f5f4a; --accent-fg: #ffffff; --line: #d9e0db; --you: #2b6fd6;
@@ -23,16 +23,16 @@
       --accent: #5fbf9b; --accent-fg: #0c1a14; --line: #2d3832; --you: #6ea4ff; color-scheme: dark; }
   }
   * { box-sizing: border-box; }
-  html, body { height: 100%; margin: 0; }
-  body { background: var(--bg); color: var(--fg); font: 16px/1.45 var(--body); display: flex; flex-direction: column; }
+  html, body { margin: 0; }
+  body { background: var(--bg); color: var(--fg); font: 16px/1.45 var(--body); }
   header { padding: calc(env(safe-area-inset-top, 0px) + 10px) max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px));
     background: var(--accent); color: var(--accent-fg); display: flex; align-items: center; gap: 12px; }
   header h1 { font: 700 1.15rem/1.2 var(--display); margin: 0; flex: 1; min-width: 0; }
   header .meta { font-size: .85rem; opacity: .85; white-space: nowrap; }
-  #map { flex: 1; min-height: 200px; }
+  #map { height: 42vh; min-height: 220px; }
   #sheet { background: var(--surface); border-top: 1px solid var(--line);
-    padding: 14px max(16px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 14px) max(16px, env(safe-area-inset-left, 0px));
-    max-height: 52vh; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+    padding: 14px max(16px, env(safe-area-inset-right, 0px)) 24px max(16px, env(safe-area-inset-left, 0px));
+    display: flex; flex-direction: column; gap: 10px; }
   .eyebrow { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
   #stopName { font: 700 1.35rem/1.2 var(--display); margin: 0; text-wrap: balance; }
   #guide { display: flex; gap: 12px; align-items: center; font-variant-numeric: tabular-nums; }
@@ -43,8 +43,10 @@
   #stopText { margin: 0; max-width: 65ch; }
   #photos { display: flex; gap: 8px; overflow-x: auto; flex: none; }
   #sheet > * { flex: none; }
-  #photos img { height: 170px; max-width: 100%; object-fit: cover; border-radius: 6px; flex: none; }
+  #photos img { height: 190px; max-width: 100%; object-fit: cover; border-radius: 6px; flex: none; }
   .row { display: flex; flex-wrap: wrap; gap: 8px; }
+  #nav { position: sticky; bottom: 0; z-index: 500; background: var(--surface); border-top: 1px solid var(--line);
+    padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 10px) max(16px, env(safe-area-inset-left, 0px)); }
   button, .btn { font: 600 .95rem var(--body); border-radius: 8px; padding: 10px 14px; border: 1px solid var(--line);
     background: var(--bg); color: var(--fg); text-decoration: none; cursor: pointer; }
   button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); flex: 1; }
@@ -77,10 +79,6 @@
   <div id="photos"></div>
   <p id="stopText"></p>
   <div class="row">
-    <button id="prev">Back</button>
-    <button id="next" class="primary">Next stop</button>
-  </div>
-  <div class="row">
     <a class="btn" id="walkLink" target="_blank" rel="noopener">Walking directions</a>
     <a class="btn" id="transitLink" target="_blank" rel="noopener">Bus or train</a>
   </div>
@@ -96,6 +94,10 @@
   </details>
   <div id="status"></div>
 </section>
+<div id="nav" class="row">
+  <button id="prev">Back</button>
+  <button id="next" class="primary">Next stop</button>
+</div>
 <script src="vendor/leaflet/leaflet.js"></script>
 <script src="app.js"></script>
 </body>
