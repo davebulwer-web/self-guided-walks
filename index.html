@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Self-guided walks</title>
+<meta name="theme-color" content="#1f5f4a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Source+Sans+3:wght@400;600&display=swap">
+<style>
+  /* Layout: full-screen map with a bottom sheet holding the current stop */
+  :root {
+    --bg: #f3f5f1; --surface: #ffffff; --fg: #1d2420; --muted: #5d6a63;
+    --accent: #1f5f4a; --accent-fg: #ffffff; --line: #d9e0db; --you: #2b6fd6;
+    --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+    --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #121714; --surface: #1b221e; --fg: #e6ece8; --muted: #9aa8a0;
+      --accent: #5fbf9b; --accent-fg: #0c1a14; --line: #2d3832; --you: #6ea4ff; color-scheme: dark; }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { background: var(--bg); color: var(--fg); font: 16px/1.45 var(--body); display: flex; flex-direction: column; }
+  header { padding: calc(env(safe-area-inset-top, 0px) + 10px) max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px));
+    background: var(--accent); color: var(--accent-fg); display: flex; align-items: center; gap: 12px; }
+  header h1 { font: 700 1.15rem/1.2 var(--display); margin: 0; flex: 1; min-width: 0; }
+  header .meta { font-size: .85rem; opacity: .85; white-space: nowrap; }
+  #map { flex: 1; min-height: 200px; }
+  #sheet { background: var(--surface); border-top: 1px solid var(--line);
+    padding: 14px max(16px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 14px) max(16px, env(safe-area-inset-left, 0px));
+    max-height: 52vh; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+  .eyebrow { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  #stopName { font: 700 1.35rem/1.2 var(--display); margin: 0; text-wrap: balance; }
+  #guide { display: flex; gap: 12px; align-items: center; font-variant-numeric: tabular-nums; }
+  #arrow { width: 44px; height: 44px; flex: none; border-radius: 50%; background: var(--bg); display: grid; place-items: center; font-size: 1.4rem; transition: transform .3s; }
+  #guideText { font-weight: 600; }
+  #guideText small { display: block; font-weight: 400; color: var(--muted); }
+  .arrived #arrow { background: var(--accent); color: var(--accent-fg); }
+  #stopText { margin: 0; max-width: 65ch; }
+  #photos { display: flex; gap: 8px; overflow-x: auto; }
+  #photos img { height: 120px; border-radius: 6px; flex: none; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; }
+  button, .btn { font: 600 .95rem var(--body); border-radius: 8px; padding: 10px 14px; border: 1px solid var(--line);
+    background: var(--bg); color: var(--fg); text-decoration: none; cursor: pointer; }
+  button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); flex: 1; }
+  button:disabled { opacity: .45; cursor: default; }
+  button:focus-visible, .btn:focus-visible { outline: 3px solid var(--you); outline-offset: 2px; }
+  details { font-size: .9rem; color: var(--muted); }
+  details summary { cursor: pointer; }
+  details .row { margin-top: 8px; }
+  #status { font-size: .85rem; color: var(--muted); }
+  .pin { background: var(--accent); color: var(--accent-fg); border: 2px solid var(--surface); border-radius: 50%;
+    width: 30px; height: 30px; display: grid; place-items: center; font: 700 14px var(--body); box-shadow: 0 1px 4px rgba(0,0,0,.35); }
+  .pin.current { background: var(--you); width: 36px; height: 36px; font-size: 16px; }
+  .pin.done { opacity: .55; }
+  @media (prefers-reduced-motion: reduce) { #arrow { transition: none; } }
+</style>
+</head>
+<body>
+<header>
+  <h1 id="routeTitle">Loading walk…</h1>
+  <span class="meta" id="routeMeta"></span>
+</header>
+<div id="map" role="region" aria-label="Map"></div>
+<section id="sheet" aria-live="polite">
+  <div class="eyebrow" id="stopCount"></div>
+  <h2 id="stopName"></h2>
+  <div id="guide">
+    <div id="arrow" aria-hidden="true">↑</div>
+    <div id="guideText">Waiting for your location…<small>Allow location access when your phone asks.</small></div>
+  </div>
+  <p id="stopText"></p>
+  <div id="photos"></div>
+  <div class="row">
+    <button id="prev">Back</button>
+    <button id="next" class="primary">Next stop</button>
+  </div>
+  <div class="row">
+    <a class="btn" id="walkLink" target="_blank" rel="noopener">Walking directions</a>
+    <a class="btn" id="transitLink" target="_blank" rel="noopener">Bus or train</a>
+  </div>
+  <details>
+    <summary>Fix this stop's pin</summary>
+    <p>If the pin is in the wrong place, stand where the stop should be and tap the button. Your fixes are saved on this phone.</p>
+    <div class="row">
+      <button id="fixPin">Move pin to where I am</button>
+      <button id="copyRoute">Copy route data</button>
+      <button id="resetPins">Undo my fixes</button>
+    </div>
+    <textarea id="routeOut" rows="6" style="width:100%;margin-top:8px" hidden readonly></textarea>
+  </details>
+  <div id="status"></div>
+</section>
+<script src="vendor/leaflet/leaflet.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
