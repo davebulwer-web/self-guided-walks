@@ -2,9 +2,9 @@
 // guides the walker from one stop to the next using the phone's GPS.
 
 const params = new URLSearchParams(location.search);
-const routeId = params.get("route") || "uckfield-lunch";
-const fixesKey = "walk-fixes:" + routeId;
-const progressKey = "walk-progress:" + routeId;
+const preview = params.has("preview");
+let routeId = params.get("route");
+let fixesKey, progressKey;
 
 const $ = (id) => document.getElementById(id);
 let route, map, line, youMarker, youCircle;
@@ -67,7 +67,7 @@ function show(i) {
   const photos = $("photos");
   photos.replaceChildren(...(s.photos || []).map((p) => {
     const img = document.createElement("img");
-    img.src = typeof p === "string" ? p : p.src;
+    img.src = typeof p === "string" ? p : p.src || p.data;
     img.alt = (typeof p === "object" && p.caption) || s.name;
     img.loading = "lazy";
     return img;
@@ -135,19 +135,60 @@ function applyFixes() {
   route.stops.forEach((s, i) => { if (fixes[i]) Object.assign(s, fixes[i]); });
 }
 
-async function init() {
+async function listWalks() {
   try {
-    const res = await fetch(`routes/${encodeURIComponent(routeId)}.json`, { cache: "no-cache" });
-    if (!res.ok) throw new Error(res.status);
-    route = await res.json();
-  } catch {
-    $("routeTitle").textContent = "Walk not found";
-    $("guideText").textContent = `There is no route called "${routeId}".`;
-    return;
+    const res = await fetch("routes/index.json", { cache: "no-cache" });
+    if (res.ok) return (await res.json()).walks || [];
+  } catch {}
+  return [];
+}
+
+// With several walks and none chosen, show the list instead of a map.
+function showWalkList(walks) {
+  $("routeTitle").textContent = "Choose a walk";
+  $("map").hidden = true;
+  $("nav").hidden = true;
+  const sheet = $("sheet");
+  sheet.replaceChildren(...walks.map((w) => {
+    const a = document.createElement("a");
+    a.className = "walk-card";
+    a.href = `?route=${encodeURIComponent(w.id)}`;
+    const h = document.createElement("strong");
+    h.textContent = w.title;
+    const p = document.createElement("span");
+    p.textContent = [w.summary, w.stops && `${w.stops} stops`].filter(Boolean).join(" · ");
+    a.append(h, p);
+    return a;
+  }));
+}
+
+async function init() {
+  if (preview) {
+    route = load("walk-preview", null);
+    if (!route) { $("routeTitle").textContent = "Nothing to preview"; return; }
+    routeId = "preview";
+  } else {
+    if (!routeId) {
+      const walks = await listWalks();
+      if (walks.length > 1) return showWalkList(walks);
+      routeId = walks[0]?.id || "uckfield-lunch";
+    }
+    try {
+      const res = await fetch(`routes/${encodeURIComponent(routeId)}.json`, { cache: "no-cache" });
+      if (!res.ok) throw new Error(res.status);
+      route = await res.json();
+    } catch {
+      $("routeTitle").textContent = "Walk not found";
+      $("guideText").textContent = `There is no walk called "${routeId}".`;
+      return;
+    }
   }
+  fixesKey = "walk-fixes:" + routeId;
+  progressKey = "walk-progress:" + routeId;
   applyFixes();
   document.title = route.title;
   $("routeTitle").textContent = route.title;
+  if (preview) $("routeTitle").textContent = "Preview: " + route.title;
   $("routeMeta").textContent = `${route.stops.length} stops · ${formatDistance(routeLength())}`;
 
   map = L.map("map", { zoomControl: true });

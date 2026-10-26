@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Walk editor</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#1f5f4a">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Source+Sans+3:wght@400;600&display=swap">
+<style>
+  /* Layout: map on top (left on wide screens), the walk's details and stop list below it */
+  :root {
+    --bg: #f3f5f1; --surface: #ffffff; --fg: #1d2420; --muted: #5d6a63;
+    --accent: #1f5f4a; --accent-fg: #ffffff; --line: #d9e0db; --you: #2b6fd6;
+    --danger: #a8322d; --ok: #1f7a4a;
+    --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+    --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #121714; --surface: #1b221e; --fg: #e6ece8; --muted: #9aa8a0;
+      --accent: #5fbf9b; --accent-fg: #0c1a14; --line: #2d3832; --you: #6ea4ff;
+      --danger: #ff8a80; --ok: #7fd6a6; color-scheme: dark; }
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; }
+  body { background: var(--bg); color: var(--fg); font: 16px/1.45 var(--body); }
+  header { padding: calc(env(safe-area-inset-top, 0px) + 10px) max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px));
+    background: var(--accent); color: var(--accent-fg); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  header h1 { font: 700 1.15rem/1.2 var(--display); margin: 0; flex: 1; min-width: 0; }
+  header a { color: inherit; font-size: .9rem; }
+  main { display: grid; }
+  #map { height: 45vh; min-height: 240px; }
+  #panel { padding: 14px max(16px, env(safe-area-inset-right, 0px)) 120px max(16px, env(safe-area-inset-left, 0px)); display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  @media (min-width: 900px) {
+    main { grid-template-columns: 1fr 440px; height: calc(100vh - 52px); }
+    #map { height: 100%; }
+    #panel { overflow-y: auto; }
+  }
+  h2 { font: 700 1.1rem/1.2 var(--display); margin: 0; }
+  .hint { color: var(--muted); font-size: .9rem; margin: 0; }
+  label { display: flex; flex-direction: column; gap: 4px; font-weight: 600; font-size: .9rem; }
+  input[type=text], input[type=password], textarea, select { font: 16px var(--body); padding: 9px 10px; border-radius: 8px;
+    border: 1px solid var(--line); background: var(--surface); color: var(--fg); width: 100%; }
+  textarea { resize: vertical; min-height: 90px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  button { font: 600 .95rem var(--body); border-radius: 8px; padding: 9px 13px; border: 1px solid var(--line);
+    background: var(--surface); color: var(--fg); cursor: pointer; }
+  button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+  button.danger { color: var(--danger); }
+  button.small { padding: 5px 9px; font-size: .85rem; }
+  button:disabled { opacity: .45; cursor: default; }
+  button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 3px solid var(--you); outline-offset: 2px; }
+  #stops { display: flex; flex-direction: column; gap: 10px; list-style: none; margin: 0; padding: 0; }
+  .stop { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .stop.selected { border-color: var(--you); box-shadow: 0 0 0 2px var(--you); }
+  .stop-head { display: flex; gap: 10px; align-items: center; }
+  .num { width: 28px; height: 28px; flex: none; border-radius: 50%; background: var(--accent); color: var(--accent-fg); display: grid; place-items: center; font-weight: 700; font-size: .9rem; }
+  .stop-head input { flex: 1; min-width: 0; }
+  .coords { font-size: .8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .thumbs { display: flex; gap: 8px; flex-wrap: wrap; }
+  .thumb { position: relative; }
+  .thumb img { width: 96px; height: 72px; object-fit: cover; border-radius: 6px; display: block; }
+  .thumb button { position: absolute; top: 3px; right: 3px; padding: 1px 7px; font-size: .8rem; }
+  .thumb input { width: 96px; font-size: .75rem; padding: 3px 5px; margin-top: 3px; }
+  .empty { border: 1px dashed var(--line); border-radius: 10px; padding: 16px; color: var(--muted); text-align: center; }
+  details { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+  details summary { cursor: pointer; font-weight: 600; }
+  details > div { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+  #bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 1000; background: var(--surface); border-top: 1px solid var(--line);
+    padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 10px) max(16px, env(safe-area-inset-left, 0px)); }
+  #bar .row { justify-content: flex-end; }
+  #msg { flex: 1; min-width: 0; font-size: .9rem; color: var(--muted); }
+  #msg.ok { color: var(--ok); } #msg.err { color: var(--danger); }
+  .pin { background: var(--accent); color: var(--accent-fg); border: 2px solid var(--surface); border-radius: 50%;
+    width: 30px; height: 30px; display: grid; place-items: center; font: 700 14px var(--body); box-shadow: 0 1px 4px rgba(0,0,0,.35); }
+  .pin.selected { background: var(--you); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Walk editor</h1>
+  <a href="./">Open the walks app</a>
+</header>
+<main>
+  <div id="map" role="region" aria-label="Map. Tap to add a stop."></div>
+  <div id="panel">
+    <div class="row">
+      <label style="flex:1">Walk to edit
+        <select id="walkPick"><option value="">New walk</option></select>
+      </label>
+    </div>
+    <label>Walk title <input type="text" id="title" placeholder="e.g. Brighton &amp; Hove Albion: the Goldstone years"></label>
+    <label>Short summary <textarea id="summary" rows="2" placeholder="Where it starts and ends, how long it takes"></textarea></label>
+    <div>
+      <h2>Stops</h2>
+      <p class="hint">Tap the map to add a stop, or use your location. Drag a pin to move it.</p>
+    </div>
+    <div class="row">
+      <button id="addHere">Add stop where I am</button>
+      <button id="searchBtn">Find a place…</button>
+    </div>
+    <div class="row" id="searchRow" hidden>
+      <input type="text" id="searchBox" placeholder="Paste coordinates, e.g. 50.9691, 0.0972" style="flex:1">
+      <button id="searchGo">Go</button>
+    </div>
+    <ol id="stops"></ol>
+    <details id="ghBox">
+      <summary>GitHub publishing settings</summary>
+      <div>
+        <p class="hint">Publishing saves the walk and its photos to your repository, and the site updates a minute or two later. The key is stored only in this browser.</p>
+        <label>Repository <input type="text" id="ghRepo" placeholder="owner/repository"></label>
+        <label>Access key <input type="password" id="ghToken" placeholder="github_pat_…" autocomplete="off"></label>
+        <p class="hint">To make a key: GitHub → Settings → Developer settings → Fine-grained tokens → Generate new token. Choose "Only select repositories" and pick this repository. Under Repository permissions, set Contents to "Read and write".</p>
+        <div class="row"><button id="ghSave">Save settings</button><button id="ghForget" class="danger">Forget key</button></div>
+      </div>
+    </details>
+    <details>
+      <summary>Other options</summary>
+      <div>
+        <div class="row">
+          <button id="copyJson">Copy walk data</button>
+          <button id="clearDraft" class="danger">Start a new walk</button>
+        </div>
+        <textarea id="jsonOut" rows="6" readonly hidden></textarea>
+      </div>
+    </details>
+  </div>
+</main>
+<div id="bar">
+  <div class="row">
+    <span id="msg" role="status">Draft saved on this device as you type.</span>
+    <button id="preview">Preview</button>
+    <button id="publish" class="primary">Publish</button>
+  </div>
+</div>
+<script src="vendor/leaflet/leaflet.js"></script>
+<script src="editor.js"></script>
+</body>
+</html>
