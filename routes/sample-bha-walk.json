@@ -1,0 +1,54 @@
+{
+  "id": "sample-bha-walk",
+  "title": "Sample BHA Walk",
+  "summary": "",
+  "arriveRadiusMetres": 25,
+  "stops": [
+    {
+      "name": "Brighton Museum & Art Gallery",
+      "lat": 50.823153,
+      "lng": -0.137817,
+      "text": "Brighton Museum & Art Gallery is a municipally owned public museum and art gallery in the city of Brighton and Hove in the South East of England",
+      "photos": [
+        "photos/sample-bha-walk-1-mvplt4sn.jpg"
+      ]
+    },
+    {
+      "name": "Seven Stars Pub",
+      "lat": 50.82224,
+      "lng": -0.141637,
+      "text": "On June 24, 1901, the Seven Stars hosted the historic meeting organized by John Jackson (a former professional footballer and trainer) to establish a new semi-professional football club",
+      "photos": [
+        "photos/sample-bha-walk-2-mvplt7pz.jpg",
+        "photos/sample-bha-walk-2-mvplt9em.jpg"
+      ]
+    },
+    {
+      "name": "The Bosun",
+      "lat": 50.822743,
+      "lng": -0.143901,
+      "text": "Christmas festivities were in full swing in the Bosun pub in West Street, Brighton. A group of Albion fans were analysing their vocal failings after a visit to Crystal Palace and decided how to put things right. Said Jeff Wells of Bowring Way, Brighton: “At Selhurst Park the Palace supporters started chanting ‘Eagles’ and the volume was so loud that we could not sing anything louder than them.”",
+      "photos": [
+        "photos/sample-bha-walk-3-mvpltb61.jpg"
+      ]
+    },
+    {
+      "name": "Old Club Shop",
+      "lat": 50.824326,
+      "lng": -0.143187,
+      "text": "Site of the old club shop and ticket office",
+      "photos": [
+        "photos/sample-bha-walk-4-mvpltchn.jpg"
+      ]
+    },
+    {
+      "name": "Brighton Station",
+      "lat": 50.828639,
+      "lng": -0.141213,
+      "text": "Gateway to the Goldstone Ground, Withdean and The Amex",
+      "photos": [
+        "photos/sample-bha-walk-5-mvplte2o.jpg"
+      ]
+    }
+  ]
+}
